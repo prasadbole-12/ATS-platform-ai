@@ -16,12 +16,20 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.v1.router import api_router
 
+from app.database.session import Base, engine
+from app.models.candidate import Candidate
+from app.models.job_description import JobDescription
+from app.models.ranking import Ranking
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
     logger = logging.getLogger("ats")
     logger.info("ATS Platform starting — env: %s", settings.ENVIRONMENT)
+
+    # Create database tables automatically
+    Base.metadata.create_all(bind=engine)
 
     # Ensure upload directory exists
     Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
@@ -30,13 +38,18 @@ async def lifespan(app: FastAPI):
     try:
         from app.database.session import SessionLocal
         from app.ml.tfidf_engine import bootstrap_tfidf_engine
+
         db = SessionLocal()
         try:
             bootstrap_tfidf_engine(db)
         finally:
             db.close()
+
     except Exception as exc:
-        logger.warning("TF-IDF bootstrap skipped (DB not ready yet): %s", exc)
+        logger.warning(
+            "TF-IDF bootstrap skipped (DB not ready yet): %s",
+            exc
+        )
 
     yield
 
@@ -67,16 +80,20 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/health", tags=["Health"], include_in_schema=False)
 def health_check() -> dict:
     from app.ml.tfidf_engine import tfidf_engine
+
     return {
-        "status":         "healthy",
-        "app":            settings.APP_NAME,
-        "version":        settings.APP_VERSION,
-        "environment":    settings.ENVIRONMENT,
-        "tfidf_fitted":   tfidf_engine.is_fitted,
-        "tfidf_vocab":    tfidf_engine.vocab_size,
+        "status": "healthy",
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "environment": settings.ENVIRONMENT,
+        "tfidf_fitted": tfidf_engine.is_fitted,
+        "tfidf_vocab": tfidf_engine.vocab_size,
     }
 
 
 @app.get("/", include_in_schema=False)
 def root() -> dict:
-    return {"message": f"Welcome to {settings.APP_NAME}", "docs": "/api/docs"}
+    return {
+        "message": f"Welcome to {settings.APP_NAME}",
+        "docs": "/api/docs"
+    }
