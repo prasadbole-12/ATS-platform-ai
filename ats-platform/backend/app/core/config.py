@@ -21,9 +21,11 @@ class Settings(BaseSettings):
 
     # ---- Security ----
     SECRET_KEY: str = "change-this-secret-key-in-production"
+
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
+        "https://ats-platform-2htwduh19-prasadbole-12s-projects.vercel.app",
     ]
 
     # ---- File Uploads ----
