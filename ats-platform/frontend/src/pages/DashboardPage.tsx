@@ -54,13 +54,18 @@ export default function DashboardPage() {
       }))
     : []
 
-  const isLoading = statsQuery.isLoading || rankingsQuery.isLoading
+  const isLoading = statsQuery.isLoading || rankingsQuery.isLoading || candidatesQuery.isLoading
+  const isError = statsQuery.isError || rankingsQuery.isError || candidatesQuery.isError
 
-  if (statsQuery.isError) {
+  if (isError) {
     return (
       <ErrorState
         message="Could not load dashboard. Make sure the backend is running and mock data is seeded."
-        onRetry={() => statsQuery.refetch()}
+        onRetry={() => {
+          statsQuery.refetch()
+          rankingsQuery.refetch()
+          candidatesQuery.refetch()
+        }}
       />
     )
   }
