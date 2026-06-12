@@ -6,7 +6,7 @@ import axios from 'axios'
 
 const API_BASE_URL: string =
   (import.meta.env as Record<string, string>)['VITE_API_BASE_URL'] ??
-  'http://localhost:8000'
+  'https://ats-platform-backend-1v8d.onrender.com'
 
 export const apiClient = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
@@ -17,7 +17,9 @@ export const apiClient = axios.create({
 // Attach auth token when present
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 
